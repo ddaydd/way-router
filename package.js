@@ -1,5 +1,5 @@
 Package.describe({
-  name: 'dfm:way-router',
+  name: 'dayd:wayrouter',
   version: '0.0.1',
   // Brief, one-line summary of the package.
   summary: 'simple meteor router',
