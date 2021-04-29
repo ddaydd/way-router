@@ -13,12 +13,28 @@ class Route {
   constructor(route) {
     this.name = route.name;
     this.path = route.path;
+    if(route.waitOn) this.waitOnFn = route.waitOn;
     if(route.onBeforeAction) this.onBeforeAction = route.onBeforeAction;
     if(route.data) this.data = route.data;
   }
 
   setParams(params) {
     this.params = params;
+  }
+
+  waitOn(route, router) {
+    const ctx = this;
+    const subs = route.waitOnFn.call(ctx);
+    Tracker.autorun(function() {
+      if(subs.ready()) {
+        if(router.renderedView) Blaze.remove(router.renderedView);
+        router.renderedView = Route.view(route);
+      }
+      else {
+        if(router.renderedView) Blaze.remove(router.renderedView);
+        router.renderedView = Route.view({name: 'wayLoading'});
+      }
+    });
   }
 
   static view(route) {
@@ -75,11 +91,12 @@ class Router {
     if(!route) {
       if(!opts.notPush) history.pushState({}, "", path);
       if(this.renderedView) Blaze.remove(this.renderedView);
-      this.renderedView = Route.view({name: 'notFound'});
+      this.renderedView = Route.view({name: 'wayNotFound'});
     }
     else {
       if(!opts.notPush) history.pushState({}, "", path);
       if(this.renderedView) Blaze.remove(this.renderedView);
+      if(route.waitOnFn) return route.waitOn(route, this);
       this.renderedView = Route.view(route);
     }
   }
